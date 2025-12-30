@@ -3,7 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import {Feedback} from './feedbacks/feedback.entity';
+import { FeedbacksModule } from './feedbacks/feedbacks.module';
 
 
 @Module({
@@ -20,7 +20,6 @@ import {Feedback} from './feedbacks/feedback.entity';
       password: process.env.DB_PASSWORD,
       database: process.env.DB_DATABASE,
 
-      entities: [Feedback],
       
       // Carrega as tabelas automaticamente, conforme vou criando
       autoLoadEntities: true, 
@@ -31,6 +30,8 @@ import {Feedback} from './feedbacks/feedback.entity';
       synchronize: true, 
       logging: true,
     }),
+
+    FeedbacksModule,
   ],
   controllers: [AppController],
   providers: [AppService],
