@@ -1,0 +1,34 @@
+# --- DEPENDÊNCIAS (O mais importante) ---
+node_modules/
+
+# --- BUILD E PRODUÇÃO ---
+dist/
+build/
+.next/
+out/
+
+# --- SEGURANÇA E AMBIENTE ---
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# --- LOGS ---
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# --- SISTEMA OPERACIONAL ---
+.DS_Store
+Thumbs.db
+
+# --- TESTES ---
+coverage/
+
+# --- IDEs (Configurações do seu editor) ---
+.vscode/
+.idea/
+*.sublime-workspace
