@@ -6,10 +6,10 @@ import { AppService } from './app.service';
 
 @Module({
   imports: [
-    // 1. Carrega as variáveis do arquivo .env para a memória
+    // carregando variaveis do env
     ConfigModule.forRoot(),
 
-    // 2. Configura a conexão com o Banco de Dados
+    //conecta com o banco de dados
     TypeOrmModule.forRoot({
       type: 'postgres',
       host: process.env.DB_HOST,
@@ -18,7 +18,7 @@ import { AppService } from './app.service';
       password: process.env.DB_PASSWORD,
       database: process.env.DB_DATABASE,
       
-      // AutoLoad: Descobre automaticamente as tabelas (Entidades) que criaremos depois
+      // Carrega as tabelas automaticamente, conforme vou criando
       autoLoadEntities: true, 
       
       // Sync: Cria as tabelas automaticamente. 
