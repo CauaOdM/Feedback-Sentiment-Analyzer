@@ -3,6 +3,8 @@ import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import {Feedback} from './feedbacks/feedback.entity';
+
 
 @Module({
   imports: [
@@ -17,6 +19,8 @@ import { AppService } from './app.service';
       username: process.env.DB_USERNAME,
       password: process.env.DB_PASSWORD,
       database: process.env.DB_DATABASE,
+
+      entities: [Feedback],
       
       // Carrega as tabelas automaticamente, conforme vou criando
       autoLoadEntities: true, 
@@ -25,6 +29,7 @@ import { AppService } from './app.service';
       // PERIGO: Em produção (empresa real) isso deve ser FALSE, pois pode apagar dados.
       // Para nosso projeto MVP, deixamos TRUE para ganhar velocidade.
       synchronize: true, 
+      logging: true,
     }),
   ],
   controllers: [AppController],
