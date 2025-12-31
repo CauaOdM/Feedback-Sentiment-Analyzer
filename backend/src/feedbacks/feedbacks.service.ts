@@ -54,6 +54,30 @@ export class FeedbacksService {
     return await this.feedbacksRepository.delete(id);
   }
 
+  //Só edita o texto no banco de dados
+  async updateResponse(id: string, newResponse: string) {
+    return await this.feedbacksRepository.update(id, {
+      suggestedResponse: newResponse
+    });
+  }
+  //busca o feedback e envia o email
+  async sendManualEmail(id: string) {
+    // Busca o feedback no banco para pegar o email e o texto
+    const feedback = await this.feedbacksRepository.findOne({ where: { id } });
+
+    if (!feedback) throw new Error('Feedback não encontrado!');
+    if (!feedback.email) throw new Error('Este feedback não tem e-mail salvo!');
+
+    // Envia o e-mail
+    await this.emailService.sendEmail(
+      feedback.email,
+      'Resposta ao seu Feedback - Feedback AI',
+      `Olá ${feedback.customerName},\n\nReferente ao seu comentário: "${feedback.content}"\n\n${feedback.suggestedResponse}\n\nAtenciosamente,\nEquipe de Sucesso do Cliente`
+    );
+
+    return { message: 'Email enviado com sucesso!' };
+  }
+
   
   private async analyzeFeedback(text: string): Promise<{ sentiment: string, response: string }> {
     try {

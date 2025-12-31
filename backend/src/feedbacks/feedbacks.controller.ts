@@ -1,7 +1,6 @@
-import { Controller, Post, Body, Get } from '@nestjs/common';
+import { Controller, Post, Body, Get, Delete, Param, Patch } from '@nestjs/common';
 import { FeedbacksService } from './feedbacks.service';
 import { CreateFeedbackDto } from './dto/create-feedback.dto';
-import { Delete, Param } from '@nestjs/common/decorators';
 
 @Controller('feedbacks') // Define a rota base: http://localhost:3000/feedbacks
 export class FeedbacksController {
@@ -13,7 +12,7 @@ export class FeedbacksController {
     return this.feedbacksService.create(createFeedbackDto);
   }
 
-  @Get() // Quando alguém mandar um GET...
+  @Get() 
   findAll() {
     // ...pegue tudo que tem no banco
     return this.feedbacksService.findAll();
@@ -21,5 +20,18 @@ export class FeedbacksController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.feedbacksService.remove(id);
+  }
+
+  @Patch(':id')
+  update(
+    @Param('id') id: string, 
+    @Body() body: { suggestedResponse: string } // Pega só o texto novo
+  ) {
+    return this.feedbacksService.updateResponse(id, body.suggestedResponse);
+  }
+
+  @Post(':id/reply')
+  sendReply(@Param('id') id: string) {
+    return this.feedbacksService.sendManualEmail(id);
   }
 }
