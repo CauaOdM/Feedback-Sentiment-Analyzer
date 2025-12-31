@@ -8,61 +8,72 @@ import { HumanMessage } from '@langchain/core/messages';
 
 @Injectable()
 export class FeedbacksService {
-
   private model: ChatGoogleGenerativeAI;
 
   constructor(
-    // Injeção de Dependência:
-    // Estamos pedindo pro NestJS: "Me dá a ferramenta de mexer na tabela Feedback"
     @InjectRepository(Feedback)
     private feedbacksRepository: Repository<Feedback>,
   ) {
     this.model = new ChatGoogleGenerativeAI({
-      model: 'gemini-2.5-flash',
+
+      model: 'gemini-2.5-flash', 
       apiKey: process.env.GEMINI_API_KEY,
-      temperature: 0,
+      temperature: 0.2,
     });
   }
 
   async create(createFeedbackDto: CreateFeedbackDto) {
+    const analysis = await this.analyzeFeedback(createFeedbackDto.content);
 
-    const sentiment = await this.analyzeSentiment(createFeedbackDto.content);
-    //Cria o objeto na memória (ainda não salvou)
     const newFeedback = this.feedbacksRepository.create({
-      ... createFeedbackDto,
-      sentiment: sentiment,
-      actionRequired: sentiment === 'NEGATIVE'
+      ...createFeedbackDto,
+      sentiment: analysis.sentiment,
+      actionRequired: analysis.sentiment === 'NEGATIVE',
+      suggestedResponse: analysis.response 
     });
-    
-    //Salva no banco de dados (o INSERT INTO acontece aqui)
+
     return await this.feedbacksRepository.save(newFeedback);
   }
 
   async findAll() {
-    // Busca todos os feedbacks (SELECT * FROM feedback)
     return await this.feedbacksRepository.find({
-      order: { createdAt: 'DESC' } // Mostra os mais recentes primeiro
+      order: { createdAt: 'DESC' }
     });
   }
-  private async analyzeSentiment(text: string): Promise<string> {
-      try {
-        const prompt = `
-          Analise o sentimento do seguinte feedback.
-          Responda APENAS com uma destas palavras: POSITIVE, NEGATIVE, NEUTRAL.
-          Feedback: "${text}"
-        `;
-        const response = await this.model.invoke([
-          new HumanMessage(prompt)
-        ]);
-        const finalSentiment = response.content.toString().trim().toUpperCase(); // Tirando espaços e deixando tudo maiusculo para tratamento de strings
-        //Só retorna se for um valor esperado
-        if (['POSITIVE', 'NEGATIVE', 'NEUTRAL'].includes(finalSentiment)) {
-          return finalSentiment;
+
+  async remove(id: number) {
+    return await this.feedbacksRepository.delete(id);
+  }
+
+  
+  private async analyzeFeedback(text: string): Promise<{ sentiment: string, response: string }> {
+    try {
+      const prompt = `
+        Aja como um gerente de sucesso do cliente.
+        Analise o seguinte feedback: "${text}"
+        
+        Retorne APENAS um JSON (sem crase, sem markdown) neste formato exato:
+        {
+          "sentiment": "POSITIVE" ou "NEGATIVE" ou "NEUTRAL",
+          "response": "Escreva uma resposta curta (max 2 frases), empática e profissional para esse cliente."
         }
-        return 'NEUTRAL'; //Se der ruim, retorna neutro
-      } catch (error) {
-        console.error('Erro na IA:', error);
-        return 'NEUTRAL';
-      }
+      `;
+
+      const result = await this.model.invoke([
+        new HumanMessage(prompt)
+      ]);
+
+      
+      
+      const cleanText = result.content.toString().replace(/```json|```/g, '').trim();
+      
+      // Transforma o texto em Objeto JavaScript real
+      return JSON.parse(cleanText);
+
+    } catch (error) {
+      console.error('Erro na IA:', error);
+      // Fallback: Se der erro, devolve um padrão para não travar o sistema
+      return { sentiment: 'NEUTRAL', response: 'Obrigado pelo feedback.' };
+    }
   }
 }

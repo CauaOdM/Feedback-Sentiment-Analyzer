@@ -1,6 +1,7 @@
 import { Controller, Post, Body, Get } from '@nestjs/common';
 import { FeedbacksService } from './feedbacks.service';
 import { CreateFeedbackDto } from './dto/create-feedback.dto';
+import { Delete, Param } from '@nestjs/common/decorators';
 
 @Controller('feedbacks') // Define a rota base: http://localhost:3000/feedbacks
 export class FeedbacksController {
@@ -16,5 +17,9 @@ export class FeedbacksController {
   findAll() {
     // ...pegue tudo que tem no banco
     return this.feedbacksService.findAll();
+  }
+  @Delete(':id')
+  remove(@Param('id') id: string) {
+    return this.feedbacksService.remove(+id);
   }
 }

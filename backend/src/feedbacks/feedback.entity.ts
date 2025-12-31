@@ -18,6 +18,9 @@ export class Feedback {
   @Column({ default: false }) // 6. Valor padrão é falso
   actionRequired: boolean;
 
+  @Column('text', { nullable: true })
+  suggestedResponse: string;
+
   @CreateDateColumn() // 7. preenche automaticamente a data 
   createdAt: Date;
 }
