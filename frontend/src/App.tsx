@@ -4,7 +4,7 @@ import { Trash2, RefreshCw, MessageSquare, TrendingUp, Activity } from 'lucide-r
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 interface Feedback {
-  id: number;
+  id: string;
   customerName: string;
   content: string;
   sentiment: string;
@@ -30,7 +30,7 @@ function App() {
   };
 
   // 2. Função de Deletar
-  const deleteFeedback = async (id: number) => {
+  const deleteFeedback = async (id: string) => {
     // Confirmação simples do navegador
     if (!confirm('Tem certeza que quer apagar esse feedback?')) return;
     
@@ -49,10 +49,28 @@ function App() {
 
   // 3. Preparando dados para o Gráfico
   const chartData = [
-    { name: 'Positivo', value: feedbacks.filter(f => f.sentiment === 'POSITIVE').length, color: '#10b981' }, // Emerald-500
-    { name: 'Negativo', value: feedbacks.filter(f => f.sentiment === 'NEGATIVE').length, color: '#ef4444' }, // Red-500
-    { name: 'Neutro', value: feedbacks.filter(f => f.sentiment === 'NEUTRAL').length, color: '#64748b' },   // Slate-500
-  ].filter(d => d.value > 0); // Só mostra o que tem dados
+    { 
+      name: 'Positivo', 
+      value: feedbacks.filter(f => f.sentiment === 'POSITIVE').length, 
+      color: '#10b981' // Verde Esmeralda
+    },
+    { 
+      name: 'Negativo', 
+      value: feedbacks.filter(f => f.sentiment === 'NEGATIVE').length, 
+      color: '#ef4444' // Vermelho
+    },
+    { 
+      name: 'Neutro', 
+      value: feedbacks.filter(f => f.sentiment === 'NEUTRAL').length, 
+      color: '#64748b' // Cinza Azulado
+    },
+    { 
+      name: 'Sem Análise', 
+      // Pega tudo que NÃO for um dos 3 de cima (incluindo null/vazio)
+      value: feedbacks.filter(f => !['POSITIVE', 'NEGATIVE', 'NEUTRAL'].includes(f.sentiment)).length, 
+      color: '#334155' // Cinza Escuro (Slate-700)
+    },
+  ].filter(d => d.value > 0); // Remove fatias vazias do gráfico
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 p-8 font-sans">

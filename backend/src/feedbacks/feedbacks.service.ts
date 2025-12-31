@@ -41,7 +41,7 @@ export class FeedbacksService {
     });
   }
 
-  async remove(id: number) {
+  async remove(id: string) {
     return await this.feedbacksRepository.delete(id);
   }
 

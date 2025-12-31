@@ -20,6 +20,6 @@ export class FeedbacksController {
   }
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.feedbacksService.remove(+id);
+    return this.feedbacksService.remove(id);
   }
 }
