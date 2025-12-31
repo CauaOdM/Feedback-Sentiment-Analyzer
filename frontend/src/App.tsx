@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Trash2, RefreshCw, MessageSquare, TrendingUp, Activity, Edit2, Save, Send, X, AlertTriangle } from 'lucide-react';
+import { Trash2, RefreshCw, MessageSquare, TrendingUp, Activity, Edit2, Save, Send, X, AlertTriangle, Check, CheckCircle } from 'lucide-react';
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 interface Feedback {
@@ -13,26 +13,32 @@ interface Feedback {
   suggestedResponse?: string;
 }
 
-// Interface para controlar a Janelinha (Modal)
 interface ModalState {
   isOpen: boolean;
-  type: 'delete' | 'email';
+  type: 'delete' | 'email' | 'success'; // Adicionei o tipo 'success'
   itemId: string;
-  emailDestino?: string; // Só usado no envio de email
+  emailDestino?: string;
 }
 
 function App() {
   const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
   const [loading, setLoading] = useState(false);
 
-  // Estados de Edição
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editText, setEditText] = useState('');
   const [sendingId, setSendingId] = useState<string | null>(null);
 
   const [modal, setModal] = useState<ModalState | null>(null);
 
-  // 1. Busca dados
+  const [sentEmails, setSentEmails] = useState<string[]>(() => {
+    const saved = localStorage.getItem('sentEmails');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  useEffect(() => {
+    localStorage.setItem('sentEmails', JSON.stringify(sentEmails));
+  }, [sentEmails]);
+
   const fetchFeedbacks = async () => {
     setLoading(true);
     try {
@@ -45,7 +51,6 @@ function App() {
     }
   };
 
-  // 2. Funções auxiliares para ABRIR a modal
   const requestDelete = (id: string) => {
     setModal({ isOpen: true, type: 'delete', itemId: id });
   };
@@ -58,11 +63,10 @@ function App() {
     setModal(null);
   };
 
-  // 3. A Função que EXECUTA a ação de verdade (quando clica em "Confirmar" na modal)
   const handleConfirmAction = async () => {
     if (!modal) return;
 
-    // Cenário A: DELETAR
+    // --- DELETAR ---
     if (modal.type === 'delete') {
       try {
         await axios.delete(`http://localhost:3000/feedbacks/${modal.itemId}`);
@@ -73,23 +77,32 @@ function App() {
       }
     } 
     
-    // Cenário B: ENVIAR EMAIL
+    // --- ENVIAR EMAIL ---
     else if (modal.type === 'email') {
-      closeModal(); // Fecha a modal antes para mostrar o loading no botão
+      // Não fecha a modal ainda, mostra loading no botão
       setSendingId(modal.itemId);
       try {
         await axios.post(`http://localhost:3000/feedbacks/${modal.itemId}/reply`);
-        alert('E-mail enviado com sucesso!');
+        
+        // Atualiza lista de enviados
+        setSentEmails((prev) => [...prev, modal.itemId]);
+        
+        // === MÁGICA AQUI: Transforma a modal em SUCESSO ===
+        setModal({ 
+          ...modal, 
+          type: 'success' 
+        });
+
       } catch (error) {
         console.error(error);
-        alert('Erro ao enviar e-mail.');
+        alert('Erro ao enviar e-mail. Verifique o console.');
+        closeModal();
       } finally {
         setSendingId(null);
       }
     }
   };
 
-  // Edição (Mantida igual)
   const startEditing = (feedback: Feedback) => {
     setEditingId(feedback.id);
     setEditText(feedback.suggestedResponse || '');
@@ -100,6 +113,7 @@ function App() {
       await axios.patch(`http://localhost:3000/feedbacks/${id}`, { suggestedResponse: editText });
       setFeedbacks(feedbacks.map(item => item.id === id ? { ...item, suggestedResponse: editText } : item));
       setEditingId(null);
+      // Aqui podemos manter o alert simples ou criar uma notificação toast no futuro
       alert('Resposta salva!');
     } catch (error) {
       alert('Erro ao salvar.');
@@ -118,56 +132,70 @@ function App() {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 p-8 font-sans relative">
       
-      {/* === MODAL CUSTOMIZADA (Fica "por cima" de tudo) === */}
+      {/* === MODAL CUSTOMIZADA === */}
       {modal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl max-w-sm w-full p-6 animate-in zoom-in-95 duration-200">
             
-            {/* Ícone e Título da Modal */}
+            {/* Ícone Dinâmico */}
             <div className="flex flex-col items-center text-center mb-6">
-              <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-4 ${
-                modal.type === 'delete' ? 'bg-red-500/20 text-red-500' : 'bg-indigo-500/20 text-indigo-500'
+              <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-4 transition-colors duration-300 ${
+                modal.type === 'delete' ? 'bg-red-500/20 text-red-500' : 
+                modal.type === 'email' ? 'bg-indigo-500/20 text-indigo-500' :
+                'bg-emerald-500/20 text-emerald-500' // Cor de Sucesso
               }`}>
-                {modal.type === 'delete' ? <AlertTriangle size={24} /> : <Send size={24} />}
+                {modal.type === 'delete' && <AlertTriangle size={24} />}
+                {modal.type === 'email' && <Send size={24} />}
+                {modal.type === 'success' && <CheckCircle size={24} />}
               </div>
+
+              {/* Título Dinâmico */}
               <h3 className="text-xl font-bold text-white">
-                {modal.type === 'delete' ? 'Excluir Feedback?' : 'Enviar Resposta?'}
+                {modal.type === 'delete' && 'Excluir Feedback?'}
+                {modal.type === 'email' && 'Enviar Resposta?'}
+                {modal.type === 'success' && 'E-mail Enviado!'}
               </h3>
+
+              {/* Texto Dinâmico */}
               <p className="text-slate-400 text-sm mt-2">
-                {modal.type === 'delete' 
-                  ? 'Essa ação não pode ser desfeita. O feedback será apagado permanentemente.' 
-                  : `Deseja enviar a resposta sugerida para o e-mail: ${modal.emailDestino}?`
-                }
+                {modal.type === 'delete' && 'Essa ação não pode ser desfeita.'}
+                {modal.type === 'email' && `Enviar resposta para: ${modal.emailDestino}?`}
+                {modal.type === 'success' && `A resposta foi enviada com sucesso para ${modal.emailDestino}.`}
               </p>
             </div>
 
-            {/* Botões da Modal */}
+            {/* Botões Dinâmicos */}
             <div className="flex gap-3">
-              <button 
-                onClick={closeModal}
-                className="flex-1 px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium transition-colors"
-              >
-                Cancelar
-              </button>
-              <button 
-                onClick={handleConfirmAction}
-                className={`flex-1 px-4 py-2 rounded-lg text-white font-bold transition-colors ${
-                  modal.type === 'delete' 
-                    ? 'bg-red-600 hover:bg-red-700' 
-                    : 'bg-indigo-600 hover:bg-indigo-700'
-                }`}
-              >
-                {modal.type === 'delete' ? 'Sim, Excluir' : 'Sim, Enviar'}
-              </button>
+              {/* Se for SUCESSO, mostra apenas botão de fechar */}
+              {modal.type === 'success' ? (
+                 <button 
+                 onClick={closeModal}
+                 className="w-full px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold transition-colors"
+               >
+                 Ótimo, fechar
+               </button>
+              ) : (
+                // Se for PERGUNTA, mostra Cancelar e Confirmar
+                <>
+                  <button onClick={closeModal} className="flex-1 px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium transition-colors">Cancelar</button>
+                  <button 
+                    onClick={handleConfirmAction}
+                    disabled={sendingId !== null}
+                    className={`flex-1 px-4 py-2 rounded-lg text-white font-bold transition-colors flex items-center justify-center gap-2 ${
+                      modal.type === 'delete' ? 'bg-red-600 hover:bg-red-700' : 'bg-indigo-600 hover:bg-indigo-700'
+                    }`}
+                  >
+                    {sendingId ? 'Enviando...' : (modal.type === 'delete' ? 'Sim, Excluir' : 'Sim, Enviar')}
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>
       )}
 
-      {/* === RESTO DO SITE (CONTEÚDO NORMAL) === */}
+      {/* DASHBOARD (Igual ao anterior) */}
       <div className="max-w-6xl mx-auto space-y-8">
-        
-        {/* HEADER */}
         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
           <div>
             <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent flex items-center gap-2">
@@ -180,7 +208,6 @@ function App() {
           </button>
         </div>
 
-        {/* MÉTRICAS */}
         <div className="grid md:grid-cols-3 gap-6">
           <div className="bg-slate-900/50 p-6 rounded-2xl border border-slate-800 shadow-xl backdrop-blur-sm">
             <h2 className="text-lg font-semibold text-slate-400 mb-2 flex items-center gap-2">
@@ -207,80 +234,84 @@ function App() {
           </div>
         </div>
 
-        {/* LISTAGEM */}
         <h2 className="text-xl font-bold text-white mt-8 border-b border-slate-800 pb-4">Feedbacks Recentes</h2>
         
         <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-          {feedbacks.map((item) => (
-            <div key={item.id} className="group relative bg-slate-900 p-6 rounded-2xl border border-slate-800 hover:border-indigo-500/50 transition-all hover:shadow-2xl hover:-translate-y-1 flex flex-col">
-              
-              <button 
-                onClick={() => requestDelete(item.id)}
-                className="absolute top-4 right-4 p-2 text-slate-600 hover:text-red-400 hover:bg-red-400/10 rounded-full opacity-0 group-hover:opacity-100 transition-all"
-                title="Deletar"
-              >
-                <Trash2 size={18} />
-              </button>
+          {feedbacks.map((item) => {
+            const isSent = sentEmails.includes(item.id);
+            return (
+              <div key={item.id} className="group relative bg-slate-900 p-6 rounded-2xl border border-slate-800 hover:border-indigo-500/50 transition-all hover:shadow-2xl hover:-translate-y-1 flex flex-col">
+                <button 
+                  onClick={() => requestDelete(item.id)}
+                  className="absolute top-4 right-4 p-2 text-slate-600 hover:text-red-400 hover:bg-red-400/10 rounded-full opacity-0 group-hover:opacity-100 transition-all"
+                >
+                  <Trash2 size={18} />
+                </button>
 
-              <div className="mb-4 pr-8">
-                <h3 className="font-bold text-lg text-white truncate">{item.customerName}</h3>
-                <p className="text-xs text-slate-500 truncate mb-1">{item.email}</p>
-                <div className="flex gap-2 mt-2">
-                  <span className={`px-2 py-0.5 rounded text-xs font-bold border ${
-                    item.sentiment === 'POSITIVE' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
-                    item.sentiment === 'NEGATIVE' ? 'bg-red-500/10 text-red-400 border-red-500/20' :
-                    'bg-slate-500/10 text-slate-400 border-slate-500/20'
-                  }`}>
-                    {item.sentiment || 'N/A'}
-                  </span>
-                  {item.actionRequired && <span className="px-2 py-0.5 rounded text-xs font-bold bg-red-500/10 text-red-500 border border-red-500/20 animate-pulse">🚨 AÇÃO</span>}
-                </div>
-              </div>
-
-              <p className="text-slate-300 text-sm leading-relaxed mb-6 flex-grow">"{item.content}"</p>
-
-              <div className={`mt-auto rounded-xl p-4 border transition-colors ${editingId === item.id ? 'bg-indigo-900/20 border-indigo-500' : 'bg-indigo-950/30 border-indigo-500/20'}`}>
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2 text-indigo-400 text-xs font-bold uppercase tracking-wider">
-                    <MessageSquare size={14} /> Sugestão de Resposta
+                <div className="mb-4 pr-8">
+                  <h3 className="font-bold text-lg text-white truncate">{item.customerName}</h3>
+                  <p className="text-xs text-slate-500 truncate mb-1">{item.email}</p>
+                  <div className="flex gap-2 mt-2">
+                    <span className={`px-2 py-0.5 rounded text-xs font-bold border ${
+                      item.sentiment === 'POSITIVE' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
+                      item.sentiment === 'NEGATIVE' ? 'bg-red-500/10 text-red-400 border-red-500/20' :
+                      'bg-slate-500/10 text-slate-400 border-slate-500/20'
+                    }`}>
+                      {item.sentiment || 'N/A'}
+                    </span>
+                    {item.actionRequired && <span className="px-2 py-0.5 rounded text-xs font-bold bg-red-500/10 text-red-500 border border-red-500/20 animate-pulse">🚨 AÇÃO</span>}
                   </div>
-                  <button onClick={() => editingId === item.id ? setEditingId(null) : startEditing(item)} className="text-indigo-400 hover:text-white transition-colors p-1">
-                    {editingId === item.id ? <X size={16} /> : <Edit2 size={16} />}
-                  </button>
                 </div>
 
-                {editingId === item.id ? (
-                  <div className="animate-in fade-in duration-200">
-                    <textarea 
-                      value={editText}
-                      onChange={(e) => setEditText(e.target.value)}
-                      className="w-full bg-slate-950 text-indigo-100 text-sm p-3 rounded border border-indigo-500/50 focus:outline-none focus:ring-1 focus:ring-indigo-500 h-28 resize-none mb-3"
-                    />
-                    <button onClick={() => saveEdit(item.id)} className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2 rounded text-xs font-bold flex items-center justify-center gap-2">
-                      <Save size={14} /> Salvar Alteração
-                    </button>
+                <p className="text-slate-300 text-sm leading-relaxed mb-6 flex-grow">"{item.content}"</p>
+
+                <div className={`mt-auto rounded-xl p-4 border transition-colors ${editingId === item.id ? 'bg-indigo-900/20 border-indigo-500' : 'bg-indigo-950/30 border-indigo-500/20'}`}>
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2 text-indigo-400 text-xs font-bold uppercase tracking-wider">
+                      <MessageSquare size={14} /> Sugestão de Resposta
+                    </div>
+                    {!isSent && (
+                      <button onClick={() => editingId === item.id ? setEditingId(null) : startEditing(item)} className="text-indigo-400 hover:text-white transition-colors p-1">
+                        {editingId === item.id ? <X size={16} /> : <Edit2 size={16} />}
+                      </button>
+                    )}
                   </div>
-                ) : (
-                  <div className="animate-in fade-in duration-200">
-                    <p className="text-indigo-100/90 text-sm italic leading-snug min-h-[3rem] mb-4">"{item.suggestedResponse || "Sem sugestão."}"</p>
-                    
-                    <button 
-                      onClick={() => requestEmail(item)}
-                      disabled={sendingId === item.id}
-                      className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded text-xs font-bold flex items-center justify-center gap-2 disabled:opacity-50"
-                    >
-                      {sendingId === item.id ? 'Enviando...' : <><Send size={14} /> Enviar por Email</>}
-                    </button>
-                  </div>
-                )}
+
+                  {editingId === item.id ? (
+                    <div className="animate-in fade-in duration-200">
+                      <textarea 
+                        value={editText}
+                        onChange={(e) => setEditText(e.target.value)}
+                        className="w-full bg-slate-950 text-indigo-100 text-sm p-3 rounded border border-indigo-500/50 focus:outline-none focus:ring-1 focus:ring-indigo-500 h-28 resize-none mb-3"
+                      />
+                      <button onClick={() => saveEdit(item.id)} className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2 rounded text-xs font-bold flex items-center justify-center gap-2">
+                        <Save size={14} /> Salvar Alteração
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="animate-in fade-in duration-200">
+                      <p className="text-indigo-100/90 text-sm italic leading-snug min-h-[3rem] mb-4">"{item.suggestedResponse || "Sem sugestão."}"</p>
+                      
+                      <button 
+                        onClick={() => requestEmail(item)}
+                        disabled={sendingId === item.id || isSent}
+                        className={`w-full py-2 rounded text-xs font-bold flex items-center justify-center gap-2 transition-all duration-300
+                          ${isSent 
+                            ? 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700'
+                            : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-500/20'
+                          }
+                        `}
+                      >
+                        {isSent ? <><Check size={14} /> Resposta Enviada</> : (sendingId === item.id ? 'Enviando...' : <><Send size={14} /> Enviar por Email</>)}
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
-
-        {feedbacks.length === 0 && !loading && (
-          <div className="text-center py-20 text-slate-500">Nenhum feedback encontrado.</div>
-        )}
+        {feedbacks.length === 0 && !loading && <div className="text-center py-20 text-slate-500">Nenhum feedback encontrado.</div>}
       </div>
     </div>
   );
