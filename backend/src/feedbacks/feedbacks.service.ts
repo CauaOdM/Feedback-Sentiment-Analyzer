@@ -5,6 +5,7 @@ import { Feedback } from './feedback.entity';
 import { CreateFeedbackDto } from './dto/create-feedback.dto';
 import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
 import { HumanMessage } from '@langchain/core/messages';
+import { EmailService } from 'src/email/email.service';
 
 @Injectable()
 export class FeedbacksService {
@@ -13,6 +14,7 @@ export class FeedbacksService {
   constructor(
     @InjectRepository(Feedback)
     private feedbacksRepository: Repository<Feedback>,
+    private emailService: EmailService,
   ) {
     this.model = new ChatGoogleGenerativeAI({
 
@@ -32,7 +34,14 @@ export class FeedbacksService {
       suggestedResponse: analysis.response 
     });
 
-    return await this.feedbacksRepository.save(newFeedback);
+    const savedFeedback = await this.feedbacksRepository.save(newFeedback);
+    await this.emailService.sendEmail(
+      createFeedbackDto.email,
+      'Recebemos seu Feedback! 🤖',
+      `Olá ${createFeedbackDto.customerName},\n\nRecebemos seu comentário: "${createFeedbackDto.content}"\n\nNossa IA já analisou e em breve um humano entrará em contato!\n\nAtenciosamente,\nEquipe Feedback AI`
+    );
+
+    return savedFeedback;
   }
 
   async findAll() {

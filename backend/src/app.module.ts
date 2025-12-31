@@ -4,12 +4,13 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { FeedbacksModule } from './feedbacks/feedbacks.module';
+import { EmailModule } from './email/email.module';
 
 
 @Module({
   imports: [
     // carregando variaveis do env
-    ConfigModule.forRoot(),
+    ConfigModule.forRoot({ isGlobal: true }),
 
     //conecta com o banco de dados
     TypeOrmModule.forRoot({
@@ -32,6 +33,8 @@ import { FeedbacksModule } from './feedbacks/feedbacks.module';
     }),
 
     FeedbacksModule,
+
+    EmailModule,
   ],
   controllers: [AppController],
   providers: [AppService],
