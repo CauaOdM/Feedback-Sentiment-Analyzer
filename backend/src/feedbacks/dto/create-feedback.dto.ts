@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString,  IsEmail, Length } from 'class-validator';
+import { IsNotEmpty, IsString,  IsEmail, Length, IsArray, IsOptional } from 'class-validator';
 
 export class CreateFeedbackDto {
   @IsString({ message: 'O nome deve ser um texto' })
@@ -13,4 +13,8 @@ export class CreateFeedbackDto {
   @IsNotEmpty()
   @Length(10, 500, { message: 'O feedback deve ter entre 10 e 500 caracteres' })
   content: string;
+
+  @IsArray()
+  @IsOptional()
+  categories: string[];
 }

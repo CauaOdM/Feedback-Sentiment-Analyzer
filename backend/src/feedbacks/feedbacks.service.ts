@@ -17,7 +17,6 @@ export class FeedbacksService {
     private emailService: EmailService,
   ) {
     this.model = new ChatGoogleGenerativeAI({
-
       model: 'gemini-2.5-flash', 
       apiKey: process.env.GEMINI_API_KEY,
       temperature: 0.2,
@@ -25,24 +24,55 @@ export class FeedbacksService {
   }
 
   async create(createFeedbackDto: CreateFeedbackDto) {
-    const analysis = await this.analyzeFeedback(createFeedbackDto.content);
+    const feedback = this.feedbacksRepository.create(createFeedbackDto);
+    const savedFeedback = await this.feedbacksRepository.save(feedback);
 
-    const newFeedback = this.feedbacksRepository.create({
-      ...createFeedbackDto,
-      sentiment: analysis.sentiment,
-      actionRequired: analysis.sentiment === 'NEGATIVE',
-      suggestedResponse: analysis.response 
-    });
+    
+    this.processFeedbackInBackground(savedFeedback);
 
-    const savedFeedback = await this.feedbacksRepository.save(newFeedback);
-    await this.emailService.sendEmail(
-      createFeedbackDto.email,
-      'Recebemos seu Feedback!',
-      `Olá ${createFeedbackDto.customerName},\n\nRecebemos seu comentário: "${createFeedbackDto.content}"\n\nJá analisamos seu feedback e em breve um humano entrará em contato!\n\nAtenciosamente,\nEquipe de Sucesso do Cliente`
-    );
-
+    
     return savedFeedback;
   }
+
+  
+  private async processFeedbackInBackground(feedback: Feedback) {
+    try {
+      console.log(`[Background] Iniciando IA para Feedback ID: ${feedback.id}...`);
+
+      
+      const analysis = await this.analyzeFeedback(feedback.content);
+
+      
+      await this.feedbacksRepository.update(feedback.id, {
+        sentiment: analysis.sentiment,
+        actionRequired: analysis.sentiment === 'NEGATIVE',
+        suggestedResponse: analysis.response,
+      });
+
+      
+      if (feedback.email) {
+        await this.emailService.sendEmail(
+          feedback.email,
+          'Recebemos seu Feedback!',
+          `Olá ${feedback.customerName},\n\nRecebemos seu comentário: "${feedback.content}"\n\nNossa equipe está analisando e em breve entraremos em contato!\n\nAtenciosamente,\n Equipe de atendimento ao cliente`
+        );
+      }
+
+      console.log(`[Background] Finalizado com sucesso para ID: ${feedback.id}`);
+
+    } catch (error) {
+      console.error(`[Background] Erro no ID ${feedback.id}:`, error);
+      
+      
+      await this.feedbacksRepository.update(feedback.id, {
+        sentiment: 'ERRO', 
+        actionRequired: true,
+        suggestedResponse: 'Erro ao processar IA. Verifique manualmente.'
+      });
+    }
+  }
+
+  
 
   async findAll() {
     return await this.feedbacksRepository.find({
@@ -59,6 +89,7 @@ export class FeedbacksService {
       suggestedResponse: newResponse
     });
   }
+
   async sendManualEmail(id: string) {
     const feedback = await this.feedbacksRepository.findOne({ where: { id } });
 
@@ -67,18 +98,17 @@ export class FeedbacksService {
 
     await this.emailService.sendEmail(
       feedback.email,
-      'Resposta ao seu Feedback - Feedback AI',
-      `Olá ${feedback.customerName},\n\nReferente ao seu comentário: "${feedback.content}"\n\n${feedback.suggestedResponse}\n\nAtenciosamente,\nEquipe de Sucesso do Cliente`
+      'Resposta ao seu Feedback - Atendimento ao Cliente',
+      `Olá ${feedback.customerName},\n\nReferente ao seu comentário: "${feedback.content}"\n\n${feedback.suggestedResponse}\n\nAtenciosamente,\nEquipe de Atendimento ao Cliente`
     );
 
     return { message: 'Email enviado com sucesso!' };
   }
-
   
   private async analyzeFeedback(text: string): Promise<{ sentiment: string, response: string }> {
     try {
       const prompt = `
-        Aja como um gerente de sucesso do cliente.
+        Aja como um gerente atencioso que se importa muito com a experiencia do cliente.
         Analise o seguinte feedback: "${text}"
         
         Retorne APENAS um JSON (sem crase, sem markdown) neste formato exato:
@@ -91,17 +121,14 @@ export class FeedbacksService {
       const result = await this.model.invoke([
         new HumanMessage(prompt)
       ]);
-
-      
       
       const cleanText = result.content.toString().replace(/```json|```/g, '').trim();
-      
-      // Transforma o texto em Objeto JavaScript real
       return JSON.parse(cleanText);
 
     } catch (error) {
-      console.error('Erro:', error);
-      return { sentiment: 'NEUTRAL', response: 'Obrigado pelo feedback.' };
+      console.error('Erro na IA:', error);
+      
+      throw error; 
     }
   }
 }

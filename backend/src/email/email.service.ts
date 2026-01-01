@@ -20,7 +20,7 @@ export class EmailService {
   async sendEmail(to: string, subject: string, text: string) {
     try {
       const info = await this.transporter.sendMail({
-        from: `"Feedback AI 🤖" <${process.env.EMAIL_USER}>`,
+        from: `"Atendimento ao Cliente " <${process.env.EMAIL_USER}>`,
         to: to, 
         subject: subject, 
         text: text

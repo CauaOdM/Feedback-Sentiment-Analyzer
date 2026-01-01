@@ -12,6 +12,10 @@ export class Feedback {
   @Column() // coluna do email do cliente
   email: string;
 
+  @Column('simple-array', {nullable: true})
+  categories: string[];
+
+
   @Column('text') //Coluna de feedbacks
   content: string;
 
