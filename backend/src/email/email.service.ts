@@ -8,7 +8,6 @@ export class EmailService {
   constructor() {
     console.log('Tentando logar no Gmail com:', process.env.EMAIL_USER);
     console.log('A senha existe?', process.env.EMAIL_PASS ? 'SIM' : 'NÃO');
-    // Aqui configuramos quem está enviando
     this.transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
@@ -22,9 +21,9 @@ export class EmailService {
     try {
       const info = await this.transporter.sendMail({
         from: `"Feedback AI 🤖" <${process.env.EMAIL_USER}>`,
-        to: to, // Para quem vai (cliente)
-        subject: subject, // Assunto
-        text: text, // Texto do email
+        to: to, 
+        subject: subject, 
+        text: text
       });
       console.log('E-mail enviado: %s', info.messageId);
     } catch (error) {

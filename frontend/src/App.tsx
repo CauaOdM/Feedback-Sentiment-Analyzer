@@ -15,7 +15,7 @@ interface Feedback {
 
 interface ModalState {
   isOpen: boolean;
-  type: 'delete' | 'email' | 'success'; // Adicionei o tipo 'success'
+  type: 'delete' | 'email' | 'success';
   itemId: string;
   emailDestino?: string;
 }
@@ -66,7 +66,7 @@ function App() {
   const handleConfirmAction = async () => {
     if (!modal) return;
 
-    // --- DELETAR ---
+    // deleta
     if (modal.type === 'delete') {
       try {
         await axios.delete(`http://localhost:3000/feedbacks/${modal.itemId}`);
@@ -77,9 +77,7 @@ function App() {
       }
     } 
     
-    // --- ENVIAR EMAIL ---
     else if (modal.type === 'email') {
-      // Não fecha a modal ainda, mostra loading no botão
       setSendingId(modal.itemId);
       try {
         await axios.post(`http://localhost:3000/feedbacks/${modal.itemId}/reply`);
@@ -87,7 +85,6 @@ function App() {
         // Atualiza lista de enviados
         setSentEmails((prev) => [...prev, modal.itemId]);
         
-        // === MÁGICA AQUI: Transforma a modal em SUCESSO ===
         setModal({ 
           ...modal, 
           type: 'success' 
@@ -113,7 +110,6 @@ function App() {
       await axios.patch(`http://localhost:3000/feedbacks/${id}`, { suggestedResponse: editText });
       setFeedbacks(feedbacks.map(item => item.id === id ? { ...item, suggestedResponse: editText } : item));
       setEditingId(null);
-      // Aqui podemos manter o alert simples ou criar uma notificação toast no futuro
       alert('Resposta salva!');
     } catch (error) {
       alert('Erro ao salvar.');
@@ -164,9 +160,7 @@ function App() {
               </p>
             </div>
 
-            {/* Botões Dinâmicos */}
             <div className="flex gap-3">
-              {/* Se for SUCESSO, mostra apenas botão de fechar */}
               {modal.type === 'success' ? (
                  <button 
                  onClick={closeModal}
@@ -175,7 +169,6 @@ function App() {
                  Ótimo, fechar
                </button>
               ) : (
-                // Se for PERGUNTA, mostra Cancelar e Confirmar
                 <>
                   <button onClick={closeModal} className="flex-1 px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium transition-colors">Cancelar</button>
                   <button 
@@ -194,7 +187,7 @@ function App() {
         </div>
       )}
 
-      {/* DASHBOARD (Igual ao anterior) */}
+      {/* DASHBOARD */}
       <div className="max-w-6xl mx-auto space-y-8">
         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
           <div>

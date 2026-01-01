@@ -25,9 +25,7 @@ import { EmailModule } from './email/email.module';
       // Carrega as tabelas automaticamente, conforme vou criando
       autoLoadEntities: true, 
       
-      // Sync: Cria as tabelas automaticamente. 
-      // PERIGO: Em produção (empresa real) isso deve ser FALSE, pois pode apagar dados.
-      // Para nosso projeto MVP, deixamos TRUE para ganhar velocidade.
+      // mudar para false em produção
       synchronize: true, 
       logging: true,
     }),

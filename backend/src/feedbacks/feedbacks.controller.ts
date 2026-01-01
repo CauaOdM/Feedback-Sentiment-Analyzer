@@ -6,15 +6,13 @@ import { CreateFeedbackDto } from './dto/create-feedback.dto';
 export class FeedbacksController {
   constructor(private readonly feedbacksService: FeedbacksService) {}
 
-  @Post() // Quando alguém mandar um POST...
+  @Post() 
   create(@Body() createFeedbackDto: CreateFeedbackDto) {
-    // ...pegue o corpo da requisição (@Body) e mande pro arquivo (Service)
     return this.feedbacksService.create(createFeedbackDto);
   }
 
   @Get() 
   findAll() {
-    // ...pegue tudo que tem no banco
     return this.feedbacksService.findAll();
   }
   @Delete(':id')
@@ -25,7 +23,7 @@ export class FeedbacksController {
   @Patch(':id')
   update(
     @Param('id') id: string, 
-    @Body() body: { suggestedResponse: string } // Pega só o texto novo
+    @Body() body: { suggestedResponse: string } 
   ) {
     return this.feedbacksService.updateResponse(id, body.suggestedResponse);
   }

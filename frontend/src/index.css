@@ -3,7 +3,6 @@
 @tailwind utilities;
 
 body {
-  /* Mudamos de cinza claro (#f3f4f6) para um Slate 950 (quase preto azulado) */
   background-color: #020617; 
-  color: #f8fafc; /* Texto padrão branco gelo */
+  color: #f8fafc;
 }

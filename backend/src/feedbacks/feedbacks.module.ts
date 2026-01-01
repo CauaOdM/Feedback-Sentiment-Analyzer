@@ -1,13 +1,12 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm'; // Importar TypeORM
+import { TypeOrmModule } from '@nestjs/typeorm'; 
 import { FeedbacksService } from './feedbacks.service';
 import { FeedbacksController } from './feedbacks.controller';
-import { Feedback } from './feedback.entity'; // Importar sua Entidade
+import { Feedback } from './feedback.entity'; 
 import { EmailModule } from 'src/email/email.module';
 
 @Module({
   imports: [
-    // Aqui dizemos: "Este módulo é responsável pela tabela Feedback"
     TypeOrmModule.forFeature([Feedback]),
     EmailModule 
   ],

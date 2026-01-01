@@ -37,8 +37,8 @@ export class FeedbacksService {
     const savedFeedback = await this.feedbacksRepository.save(newFeedback);
     await this.emailService.sendEmail(
       createFeedbackDto.email,
-      'Recebemos seu Feedback! 🤖',
-      `Olá ${createFeedbackDto.customerName},\n\nRecebemos seu comentário: "${createFeedbackDto.content}"\n\nNossa IA já analisou e em breve um humano entrará em contato!\n\nAtenciosamente,\nEquipe Feedback AI`
+      'Recebemos seu Feedback!',
+      `Olá ${createFeedbackDto.customerName},\n\nRecebemos seu comentário: "${createFeedbackDto.content}"\n\nJá analisamos seu feedback e em breve um humano entrará em contato!\n\nAtenciosamente,\nEquipe de Sucesso do Cliente`
     );
 
     return savedFeedback;
@@ -54,21 +54,17 @@ export class FeedbacksService {
     return await this.feedbacksRepository.delete(id);
   }
 
-  //Só edita o texto no banco de dados
   async updateResponse(id: string, newResponse: string) {
     return await this.feedbacksRepository.update(id, {
       suggestedResponse: newResponse
     });
   }
-  //busca o feedback e envia o email
   async sendManualEmail(id: string) {
-    // Busca o feedback no banco para pegar o email e o texto
     const feedback = await this.feedbacksRepository.findOne({ where: { id } });
 
     if (!feedback) throw new Error('Feedback não encontrado!');
     if (!feedback.email) throw new Error('Este feedback não tem e-mail salvo!');
 
-    // Envia o e-mail
     await this.emailService.sendEmail(
       feedback.email,
       'Resposta ao seu Feedback - Feedback AI',
@@ -104,8 +100,7 @@ export class FeedbacksService {
       return JSON.parse(cleanText);
 
     } catch (error) {
-      console.error('Erro na IA:', error);
-      // Fallback: Se der erro, devolve um padrão para não travar o sistema
+      console.error('Erro:', error);
       return { sentiment: 'NEUTRAL', response: 'Obrigado pelo feedback.' };
     }
   }

@@ -1,8 +1,6 @@
 # 🎯 Feedback Sentiment Analyzer
 
-> **⚠️ IMPORTANT:** This README was generated with the assistance of **GitHub Copilot**, a generative AI tool, to provide comprehensive and professional documentation.
-
-> **A full-stack customer feedback management system powered by AI for intelligent sentiment analysis**
+> **A full-stack customer feedback management system for intelligent sentiment analysis**
 
 **Author:** [Cauã Sarraf](https://github.com/CauaOdM)
 
@@ -92,8 +90,6 @@ This project demonstrates modern full-stack development practices, including Typ
 - **Validation**: class-validator, class-transformer
 
 ### Frontend
-> **⚠️ Note:** The frontend interface was developed with the assistance of **Google Gemini AI** to accelerate UI development and design implementation.
-
 - **Framework**: React v19 with Vite (blazing-fast HMR)
 - **Language**: TypeScript v5 (type-safe development)
 - **Styling**: TailwindCSS v3 (utility-first CSS with custom animations)
@@ -515,12 +511,7 @@ All sensitive credentials are stored in `.env` files:
 
 ## 💡 Development Notes
 
-### Frontend Development with AI
-
-> **🤖 Generative AI Disclosure:**  
-> The frontend user interface (React components, TailwindCSS styling, and chart visualizations) was developed with significant assistance from **Google Gemini AI**, a generative AI coding assistant. This accelerated UI development and helped implement modern design patterns efficiently. The backend architecture, database design, and AI integration were implemented manually with traditional development practices.  
->  
-> **📝 Documentation Note:** This README documentation was generated with the assistance of **GitHub Copilot** to ensure comprehensive and professional project documentation.
+### Frontend Development
 
 ### Testing the AI Integration
 
