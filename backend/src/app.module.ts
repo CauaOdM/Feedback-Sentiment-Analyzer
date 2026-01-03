@@ -5,6 +5,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { FeedbacksModule } from './feedbacks/feedbacks.module';
 import { EmailModule } from './email/email.module';
+import { UsersModule } from './users/users.module';
 
 
 @Module({
@@ -33,6 +34,8 @@ import { EmailModule } from './email/email.module';
     FeedbacksModule,
 
     EmailModule,
+
+    UsersModule,
   ],
   controllers: [AppController],
   providers: [AppService],

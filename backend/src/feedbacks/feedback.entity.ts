@@ -1,4 +1,5 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne } from 'typeorm';
+import { User } from '../users/user.entity';
 
 @Entity() // identificador de tabela, basicamente da uma ordem de criação no banco de dados
 export class Feedback {
@@ -30,4 +31,7 @@ export class Feedback {
 
   @CreateDateColumn() //preenche automaticamente a data 
   createdAt: Date;
+
+  @ManyToOne(() => User, (user) => user.feedbacks, { onDelete: 'CASCADE' })
+  user: User;
 }
