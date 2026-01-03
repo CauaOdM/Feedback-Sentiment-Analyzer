@@ -2,6 +2,16 @@ import { useState } from 'react';
 import axios from 'axios';
 import { Send, CheckCircle, MessageSquare } from 'lucide-react';
 
+/**
+ * Página do cliente para submissão de feedbacks
+ * Rota: /avaliar
+ * 
+ * Funcionalidades:
+ * - Formulário com nome, email, conteúdo
+ * - Seleção múltipla de categorias (6 opções)
+ * - Feedback visual com estado de envio
+ * - Tela de sucesso após submissão
+ */
 export default function ClientPage() {
   const [formData, setFormData] = useState({
     customerName: '',
@@ -11,8 +21,13 @@ export default function ClientPage() {
   });
   const [status, setStatus] = useState<'IDLE' | 'SENDING' | 'SUCCESS' | 'ERROR'>('IDLE');
 
+  // Categorias pré-definidas para feedback
   const options = ["Atendimento Lento", "Falta de Empatia", "Informação Confusa", "Preço Alto", "Problema Técnico", "Elogio"];
 
+  /**
+   * Toggle de categoria
+   * Adiciona ou remove categoria do array de seleção
+   */
   const toggleCategory = (option: string) => {
     setFormData(prev => {
       const exists = prev.categories.includes(option);
@@ -24,8 +39,10 @@ export default function ClientPage() {
       };
     });
   };
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  /**
+   * Submete feedback para o backend
+   * Muda estado de SENDING → SUCCESS/ERROR
+   */  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setStatus('SENDING');
     try {

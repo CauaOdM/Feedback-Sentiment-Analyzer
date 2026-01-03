@@ -1,7 +1,11 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne } from 'typeorm';
 import { User } from '../users/user.entity';
 
-@Entity() // identificador de tabela, basicamente da uma ordem de criação no banco de dados
+/**
+ * Entidade Feedback - Representa um feedback de cliente
+ * Relacionado 1:N com User (cascade delete)
+ */
+@Entity()
 export class Feedback {
   
   @PrimaryGeneratedColumn('uuid') 

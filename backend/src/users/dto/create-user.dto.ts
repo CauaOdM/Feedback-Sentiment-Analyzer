@@ -1,5 +1,9 @@
 import { IsString, IsEmail, MinLength, IsNotEmpty } from 'class-validator';
 
+/**
+ * DTO para criação de usuário (gestor)
+ * Valida dados de cadastro antes de processar
+ */
 export class CreateUserDto {
   @IsString()
   @IsNotEmpty()

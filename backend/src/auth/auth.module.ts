@@ -8,6 +8,18 @@ import { LocalStrategy } from './local.strategy';
 import { JwtStrategy } from './jwt.strategy';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 
+/**
+ * Módulo de Autenticação
+ * 
+ * Responsabilidades:
+ * - Estratégias de autenticação (Local e JWT)
+ * - Geração de tokens JWT (expira em 1 dia)
+ * - Validação de credenciais
+ * 
+ * Estratégias:
+ * - LocalStrategy: Valida email/senha no login
+ * - JwtStrategy: Valida tokens em rotas protegidas
+ */
 @Module({
   imports: [
     UsersModule,

@@ -1,6 +1,11 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
+
+/**
+ * Inicializa a aplicação NestJS
+ * Configura pipes de validação, CORS e port
+ */
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 

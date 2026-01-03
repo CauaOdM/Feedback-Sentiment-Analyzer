@@ -1,6 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import * as nodemailer from 'nodemailer';
 
+/**
+ * Serviço de email
+ * Integrado com Gmail via nodemailer
+ * Usa App Password (não senha real) para segurança
+ */
 @Injectable()
 export class EmailService {
   private transporter;
@@ -17,6 +22,12 @@ export class EmailService {
     });
   }
 
+  /**
+   * Envia email para um destinatário
+   * @param to - Email do destinatário
+   * @param subject - Assunto do email
+   * @param text - Corpo do email em texto simples
+   */
   async sendEmail(to: string, subject: string, text: string) {
     try {
       const info = await this.transporter.sendMail({

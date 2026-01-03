@@ -3,6 +3,20 @@ import axios from 'axios';
 import { Trash2, RefreshCw, MessageSquare, TrendingUp, Activity, Edit2, Save, Send, X, AlertTriangle, Check, CheckCircle, ListFilter } from 'lucide-react';
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
+/**
+ * Painel administrativo de feedbacks
+ * Rota: /
+ * 
+ * Funcionalidades:
+ * - Listagem de feedbacks em cards
+ * - Gráfico de distribuição de sentimentos
+ * - Ranking das top 5 categorias mencionadas
+ * - Edição de respostas sugeridas pela IA
+ * - Envio de emails aos clientes
+ * - Modal para confirmações de ações
+ * - Persistência de emails já enviados (localStorage)
+ */
+
 interface Feedback {
   id: string;
   customerName: string;
@@ -50,6 +64,11 @@ export default function AdminDashboard() {
     return Object.entries(categoryCount).sort(([, a], [, b]) => b - a).slice(0, 5);
   }, [feedbacks]);
 
+  /**
+   * Busca todos os feedbacks do backend
+   * Realiza uma requisição GET para listar feedbacks da base de dados
+   * Atualiza estado de carregamento durante a operação
+   */
   const fetchFeedbacks = async () => {
     setLoading(true);
     try {
@@ -63,9 +82,22 @@ export default function AdminDashboard() {
   };
 
   const requestDelete = (id: string) => { setModal({ isOpen: true, type: 'delete', itemId: id }); };
+  /**
+   * Abre modal de confirmação para envio de email
+   * @param item - Feedback para o qual será enviado o email
+   */
   const requestEmail = (item: Feedback) => { setModal({ isOpen: true, type: 'email', itemId: item.id, emailDestino: item.email }); };
+  
+  /**
+   * Fecha o modal atual
+   */
   const closeModal = () => { setModal(null); };
 
+  /**
+   * Processa a confirmação de ações do modal (deleção ou envio de email)
+   * Para delete: remove o feedback da API e da lista
+   * Para email: envia a resposta sugerida ao cliente e marca como enviado
+   */
   const handleConfirmAction = async () => {
     if (!modal) return;
     if (modal.type === 'delete') {
@@ -85,7 +117,16 @@ export default function AdminDashboard() {
     }
   };
 
+  /**
+   * Inicia modo de edição para a resposta sugerida de um feedback
+   * @param feedback - Feedback a ser editado
+   */
   const startEditing = (feedback: Feedback) => { setEditingId(feedback.id); setEditText(feedback.suggestedResponse || ''); };
+  
+  /**
+   * Salva a resposta sugerida editada no backend
+   * @param id - ID do feedback a ser atualizado
+   */
   const saveEdit = async (id: string) => {
     try {
       await axios.patch(`http://localhost:3000/feedbacks/${id}`, { suggestedResponse: editText });

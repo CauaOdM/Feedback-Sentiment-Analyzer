@@ -1,5 +1,9 @@
 import { IsNotEmpty, IsString,  IsEmail, Length, IsArray, IsOptional } from 'class-validator';
 
+/**
+ * DTO para criação de feedback
+ * Valida entrada do cliente antes de processar
+ */
 export class CreateFeedbackDto {
   @IsString({ message: 'O nome deve ser um texto' })
   @IsNotEmpty({ message: 'O nome do cliente é obrigatório' })

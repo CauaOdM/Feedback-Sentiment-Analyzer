@@ -2,9 +2,13 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './user.entity';
-import * as bcrypt from 'bcrypt'; //criptografia da senha
-import { CreateUserDto } from './dto/create-user.dto'; // DTO para criação de usuário
+import * as bcrypt from 'bcrypt';
+import { CreateUserDto } from './dto/create-user.dto';
 
+/**
+ * Serviço para gerenciar usuários/gestores
+ * Responsável por CRUD com bcrypt para senhas
+ */
 @Injectable()
 export class UsersService {
   constructor(
@@ -12,27 +16,45 @@ export class UsersService {
     private usersRepository: Repository<User>,
   ) {}
 
-  // 1. Encontrar usuário pelo email (Usado no Login)
+  /**
+   * Encontra usuário pelo email
+   * Usado para login e validação
+   * @param email - Email do usuário
+   * @returns Usuário encontrado ou null
+   */
   async findOneByEmail(email: string): Promise<User | null> {
     return this.usersRepository.findOne({ where: { email } });
   }
 
-  // 2. Encontrar usuário pelo ID (Usado para buscar feedbacks)
+  /**
+   * Encontra usuário pelo ID (UUID)
+   * @param id - UUID do usuário
+   * @returns Usuário encontrado ou null
+   */
   async findOneById(id: string): Promise<User | null> {
     return this.usersRepository.findOne({ where: { id } });
   }
 
-  // 3. Criar novo usuário (Cadastro)
+  /**
+   * Cria novo usuário com senha criptografada
+   * @param createUserDto - Dados do usuário (name, email, password, companyName, slug, nicho)
+   * @returns Usuário criado com password hasheado
+   */
   async create(createUserDto: CreateUserDto): Promise<User> {
-    // Criptografa a senha antes de salvar
+    // 1. Gera salt (aleatório) para bcrypt
     const salt = await bcrypt.genSalt();
+    
+    // 2. Hash bcrypt com salt: transforma senha em string irreversível
+    // Usa algoritmo blowfish com 10 rounds (configurado na bcrypt)
     const hashedPassword = await bcrypt.hash(createUserDto.password, salt);
 
+    // 3. Cria usuário com dados do DTO
     const newUser = this.usersRepository.create({
       ...createUserDto,
-      password: hashedPassword, // Salva o hash, não a senha real
+      password: hashedPassword, // Persiste hash, nunca a senha em texto plano
     });
 
+    // 4. Salva no banco de dados
     return this.usersRepository.save(newUser);
   }
 }

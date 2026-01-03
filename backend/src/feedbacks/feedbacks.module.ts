@@ -5,6 +5,18 @@ import { FeedbacksController } from './feedbacks.controller';
 import { Feedback } from './feedback.entity'; 
 import { EmailModule } from 'src/email/email.module';
 
+/**
+ * Módulo de Feedbacks
+ * 
+ * Responsabilidades:
+ * - Gerenciamento de feedbacks de clientes
+ * - Análise de sentimento via Gemini AI
+ * - Envio de respostas por email
+ * 
+ * Dependências:
+ * - TypeORM (persistência Feedback)
+ * - EmailModule (envio de emails)
+ */
 @Module({
   imports: [
     TypeOrmModule.forFeature([Feedback]),

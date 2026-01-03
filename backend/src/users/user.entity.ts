@@ -2,6 +2,10 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany, CreateDateColumn } from 'typeorm';
 import { Feedback } from '../feedbacks/feedback.entity';
 
+/**
+ * Entidade User - Representa um gestor/proprietário
+ * Suporta múltiplos feedbacks por usuário
+ */
 @Entity()
 export class User {
   @PrimaryGeneratedColumn('uuid') // ID único e seguro (ex: a0eebc99-9c0b...)

@@ -4,6 +4,10 @@ import { AuthGuard } from '@nestjs/passport';
 import { UsersService } from 'src/users/users.service';
 import { CreateUserDto } from 'src/users/dto/create-user.dto';
 
+/**
+ * Controlador de autenticação
+ * Endpoints para login e registro
+ */
 @Controller('auth')
 export class AuthController {
   constructor(
@@ -11,15 +15,22 @@ export class AuthController {
     private usersService: UsersService 
   ) {}
 
-  // ROTA 1: Login (Retorna o Token)
-  @UseGuards(AuthGuard('local')) // Usa o LocalStrategy para verificar senha antes
+  /**
+   * POST /auth/login
+   * Faz login com email e senha, retorna JWT
+   * Guard 'local' valida credenciais antes
+   */
+  @UseGuards(AuthGuard('local'))
   @Post('login')
   async login(@Request() req) {
     return this.authService.login(req.user);
   }
 
-  // ROTA 2: Cadastro (Cria o Usuário)
-  // Deixamos pública para você criar seu primeiro gestor
+  /**
+   * POST /auth/register
+   * Cria novo usuário (gestor)
+   * Rota pública para criar primeiro gestor
+   */
   @Post('register')
   async register(@Body() createUserDto: CreateUserDto) {
     return this.usersService.create(createUserDto);
