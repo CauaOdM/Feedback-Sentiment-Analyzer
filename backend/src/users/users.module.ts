@@ -15,6 +15,11 @@ import { User } from 'src/users/user.entity';
  * Exportação:
  * - UsersService é exportado para uso em AuthModule
  */
-  exports: [UsersService],
+@Module({
+
+  imports: [TypeOrmModule.forFeature([User])],
+  providers: [UsersService],
+  controllers: [UsersController],
+  exports: [UsersService]
 })
 export class UsersModule {}

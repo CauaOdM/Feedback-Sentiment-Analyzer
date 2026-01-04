@@ -12,5 +12,8 @@ import { EmailService } from './email.service';
  * - Usa App Password (não senha do usuário)
  * - SMTP: smtp.gmail.com
  */
+@Module({
+  providers: [EmailService],
+  exports: [EmailService]
 })
 export class EmailModule {}
