@@ -79,7 +79,9 @@ Feedback: id (UUID) | customerName | email | content | categories (array) |
 
 ## 🚀 Setup
 
-### Environment Variables (`.env`)
+### Environment Variables
+
+**Backend (`.env` na raiz do projeto):**
 ```bash
 DB_HOST=db
 DB_PORT=5432
@@ -91,6 +93,11 @@ EMAIL_USER=your_email@gmail.com
 EMAIL_PASS=your_app_password
 GEMINI_API_KEY=your_api_key
 PORT=3000
+```
+
+**Frontend (`frontend/.env`):**
+```bash
+VITE_API_URL=http://localhost:3000
 ```
 
 ### Run

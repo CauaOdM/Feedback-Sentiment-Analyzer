@@ -3,6 +3,7 @@ import axios from 'axios';
 import { Trash2, RefreshCw, MessageSquare, TrendingUp, Activity, Edit2, Save, Send, X, AlertTriangle, Check, CheckCircle, ListFilter } from 'lucide-react';
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { useAuth } from '../context/AuthContext';
+import { API_URL } from '../config/api';
 
 /**
  * Painel administrativo de feedbacks
@@ -80,7 +81,7 @@ export default function AdminDashboard() {
   const fetchFeedbacks = async () => {
     setLoading(true);
     try {
-      const response = await axios.get('http://localhost:3000/feedbacks');
+      const response = await axios.get(`${API_URL}/feedbacks`);
       setFeedbacks(response.data);
     } catch (error) {
       console.error("Erro ao buscar feedbacks:", error);
@@ -110,7 +111,7 @@ export default function AdminDashboard() {
     if (!modal) return;
     if (modal.type === 'delete') {
       try {
-        await axios.delete(`http://localhost:3000/feedbacks/${modal.itemId}`);
+        await axios.delete(`${API_URL}/feedbacks/${modal.itemId}`);
         setFeedbacks(feedbacks.filter(item => item.id !== modal.itemId));
         closeModal();
       } catch (error) { alert('Erro ao deletar.'); }
@@ -118,7 +119,7 @@ export default function AdminDashboard() {
     else if (modal.type === 'email') {
       setSendingId(modal.itemId);
       try {
-        await axios.post(`http://localhost:3000/feedbacks/${modal.itemId}/reply`);
+        await axios.post(`${API_URL}/feedbacks/${modal.itemId}/reply`);
         setSentEmails((prev) => [...prev, modal.itemId]);
         setModal({ ...modal, type: 'success' });
       } catch (error) { console.error(error); alert('Erro ao enviar.'); closeModal(); } finally { setSendingId(null); }
@@ -137,7 +138,7 @@ export default function AdminDashboard() {
    */
   const saveEdit = async (id: string) => {
     try {
-      await axios.patch(`http://localhost:3000/feedbacks/${id}`, { suggestedResponse: editText });
+      await axios.patch(`${API_URL}/feedbacks/${id}`, { suggestedResponse: editText });
       setFeedbacks(feedbacks.map(item => item.id === id ? { ...item, suggestedResponse: editText } : item));
       setEditingId(null);
     } catch (error) { alert('Erro ao salvar.'); }

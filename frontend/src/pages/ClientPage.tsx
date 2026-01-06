@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Send, CheckCircle, MessageSquare, AlertTriangle } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { API_URL } from '../config/api';
 
 /**
  * Página do cliente para submissão de feedbacks
@@ -52,7 +53,7 @@ export default function ClientPage() {
 
     const loadTenant = async () => {
       try {
-        const res = await axios.get(`http://localhost:3000/users/public/${slug}`);
+        const res = await axios.get(`${API_URL}/users/public/${slug}`);
         setTenantInfo(res.data);
       } catch (err) {
         setError('Empresa não encontrada. Peça um novo link ao gestor.');
@@ -74,7 +75,7 @@ export default function ClientPage() {
     }
     setStatus('SENDING');
     try {
-      await axios.post('http://localhost:3000/feedbacks', { ...formData, slug });
+      await axios.post(`${API_URL}/feedbacks`, { ...formData, slug });
       setStatus('SUCCESS');
     } catch (error) {
       console.error(error);

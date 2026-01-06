@@ -1,6 +1,7 @@
 import { createContext, useState, useContext, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import axios from 'axios';
+import { API_URL } from '../config/api';
 
 /**
  * Interface do usuário autenticado
@@ -84,7 +85,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const fetchProfile = async () => {
     if (!token) return;
     try {
-      const res = await axios.get('http://localhost:3000/users/me');
+      const res = await axios.get(`${API_URL}/users/me`);
       setUser(res.data);
     } catch (err) {
       // Token inválido ou expirado
@@ -150,7 +151,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setError(null);
 
     try {
-      const response = await axios.post('http://localhost:3000/auth/login', {
+      const response = await axios.post(`${API_URL}/auth/login`, {
         email,
         password,
       });
@@ -179,7 +180,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setError(null);
 
     try {
-      await axios.post('http://localhost:3000/auth/register', userData);
+      await axios.post(`${API_URL}/auth/register`, userData);
 
       // Após registrar, fazer login automaticamente
       await login(userData.email, userData.password);
