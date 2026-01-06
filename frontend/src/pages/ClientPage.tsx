@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Send, CheckCircle, MessageSquare } from 'lucide-react';
+import { Send, CheckCircle, MessageSquare, AlertTriangle } from 'lucide-react';
+import { useParams, useNavigate } from 'react-router-dom';
 
 /**
  * Página do cliente para submissão de feedbacks
@@ -13,6 +14,8 @@ import { Send, CheckCircle, MessageSquare } from 'lucide-react';
  * - Tela de sucesso após submissão
  */
 export default function ClientPage() {
+  const { slug } = useParams();
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     customerName: '',
     email: '',
@@ -20,6 +23,8 @@ export default function ClientPage() {
     categories: [] as string[]
   });
   const [status, setStatus] = useState<'IDLE' | 'SENDING' | 'SUCCESS' | 'ERROR'>('IDLE');
+  const [tenantInfo, setTenantInfo] = useState<{ companyName: string; name: string; nicho: string } | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   // Categorias pré-definidas para feedback
   const options = ["Atendimento Lento", "Falta de Empatia", "Informação Confusa", "Preço Alto", "Problema Técnico", "Elogio"];
@@ -39,18 +44,42 @@ export default function ClientPage() {
       };
     });
   };
+  useEffect(() => {
+    if (!slug) {
+      setError('Link inválido. Falta o identificador da empresa.');
+      return;
+    }
+
+    const loadTenant = async () => {
+      try {
+        const res = await axios.get(`http://localhost:3000/users/public/${slug}`);
+        setTenantInfo(res.data);
+      } catch (err) {
+        setError('Empresa não encontrada. Peça um novo link ao gestor.');
+      }
+    };
+
+    loadTenant();
+  }, [slug]);
+
   /**
    * Submete feedback para o backend
    * Muda estado de SENDING → SUCCESS/ERROR
-   */  const handleSubmit = async (e: React.FormEvent) => {
+   */
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!slug) {
+      setError('Link inválido.');
+      return;
+    }
     setStatus('SENDING');
     try {
-      await axios.post('http://localhost:3000/feedbacks', formData);
+      await axios.post('http://localhost:3000/feedbacks', { ...formData, slug });
       setStatus('SUCCESS');
     } catch (error) {
       console.error(error);
       setStatus('ERROR');
+      setError('Não foi possível enviar seu feedback. Tente novamente.');
     }
   };
 
@@ -67,6 +96,21 @@ export default function ClientPage() {
     );
   }
 
+  if (error) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4 font-sans">
+        <div className="max-w-md w-full bg-slate-900 p-8 rounded-3xl border border-red-500/30 shadow-2xl text-center">
+          <div className="bg-red-500/10 w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <AlertTriangle className="text-red-400" size={28} />
+          </div>
+          <h2 className="text-2xl font-bold text-white mb-2">Link inválido</h2>
+          <p className="text-slate-400 mb-6">{error}</p>
+          <button onClick={() => navigate('/')} className="text-indigo-400 hover:text-indigo-300 font-medium">Voltar</button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4 font-sans">
 
@@ -77,7 +121,9 @@ export default function ClientPage() {
             <MessageSquare className="text-indigo-400" size={28} />
           </div>
           <h1 className="text-3xl font-bold text-white">Sua Opinião</h1>
-          <p className="text-slate-400 mt-2">Ajude-nos a melhorar nossos serviços.</p>
+          <p className="text-slate-400 mt-2">
+            {tenantInfo ? `Sobre ${tenantInfo.companyName} (${tenantInfo.nicho})` : 'Carregando empresa...'}
+          </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">

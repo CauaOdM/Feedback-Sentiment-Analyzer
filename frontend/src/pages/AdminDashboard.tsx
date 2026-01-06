@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo } from 'react';
 import axios from 'axios';
 import { Trash2, RefreshCw, MessageSquare, TrendingUp, Activity, Edit2, Save, Send, X, AlertTriangle, Check, CheckCircle, ListFilter } from 'lucide-react';
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { useAuth } from '../context/AuthContext';
 
 /**
  * Painel administrativo de feedbacks
@@ -36,6 +37,7 @@ interface ModalState {
 }
 
 export default function AdminDashboard() {
+  const { user } = useAuth();
   const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
   const [loading, setLoading] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -188,9 +190,11 @@ export default function AdminDashboard() {
         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
           <div>
             <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent flex items-center gap-2">
-              Feedback Intelligence <Activity className="text-indigo-400" />
+              {user?.companyName || 'Painel de Gestão'} <Activity className="text-indigo-400" />
             </h1>
-            <p className="text-slate-400 text-sm mt-1">Painel de Gestão</p>
+            <p className="text-slate-400 text-sm mt-1">
+              {user ? `Olá, ${user.name || 'Gestor'} — ${user.nicho || 'seu negócio'}` : 'Gerencie feedbacks com IA'}
+            </p>
           </div>
           <button onClick={fetchFeedbacks} disabled={loading} className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 px-5 py-2.5 rounded-lg transition-all font-medium disabled:opacity-50">
             <RefreshCw size={20} className={loading ? 'animate-spin' : ''} /> {loading ? 'Atualizando...' : 'Atualizar'}

@@ -35,6 +35,24 @@ export class UsersService {
     return this.usersRepository.findOne({ where: { id } });
   }
 
+  async findOneBySlug(slug: string): Promise<User | null> {
+    return this.usersRepository.findOne({ where: { slug } });
+  }
+
+  async getProfileById(id: string): Promise<Omit<User, 'password'> | null> {
+    const user = await this.usersRepository.findOne({ where: { id } });
+    if (!user) return null;
+    const { password, ...rest } = user;
+    return rest;
+  }
+
+  async getPublicBySlug(slug: string): Promise<Pick<User, 'name' | 'companyName' | 'slug' | 'nicho'> | null> {
+    const user = await this.usersRepository.findOne({ where: { slug } });
+    if (!user) return null;
+    const { name, companyName, slug: s, nicho } = user;
+    return { name, companyName, slug: s, nicho };
+  }
+
   /**
    * Cria novo usuário com senha criptografada
    * @param createUserDto - Dados do usuário (name, email, password, companyName, slug, nicho)

@@ -4,6 +4,7 @@ import { FeedbacksService } from './feedbacks.service';
 import { FeedbacksController } from './feedbacks.controller';
 import { Feedback } from './feedback.entity'; 
 import { EmailModule } from 'src/email/email.module';
+import { UsersModule } from 'src/users/users.module';
 
 /**
  * Módulo de Feedbacks
@@ -20,7 +21,8 @@ import { EmailModule } from 'src/email/email.module';
 @Module({
   imports: [
     TypeOrmModule.forFeature([Feedback]),
-    EmailModule 
+    EmailModule,
+    UsersModule,
   ],
   controllers: [FeedbacksController],
   providers: [FeedbacksService],

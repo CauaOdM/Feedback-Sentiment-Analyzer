@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Feedback } from './feedback.entity';
@@ -6,6 +6,7 @@ import { CreateFeedbackDto } from './dto/create-feedback.dto';
 import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
 import { HumanMessage } from '@langchain/core/messages';
 import { EmailService } from 'src/email/email.service';
+import { UsersService } from 'src/users/users.service';
 
 /**
  * Serviço para gerenciar feedbacks
@@ -19,6 +20,7 @@ export class FeedbacksService {
     @InjectRepository(Feedback)
     private feedbacksRepository: Repository<Feedback>,
     private emailService: EmailService,
+    private usersService: UsersService,
   ) {
     this.model = new ChatGoogleGenerativeAI({
       model: 'gemini-2.5-flash',
@@ -34,13 +36,24 @@ export class FeedbacksService {
    * @returns Feedback salvo com ID (sentiment será preenchido em segundos)
    */
   async create(createFeedbackDto: CreateFeedbackDto) {
-    const feedback = this.feedbacksRepository.create(createFeedbackDto);
+    const user = await this.usersService.findOneBySlug(createFeedbackDto.slug);
+    if (!user) {
+      throw new BadRequestException('Empresa não encontrada para este link');
+    }
+
+    const feedback = this.feedbacksRepository.create({
+      customerName: createFeedbackDto.customerName,
+      email: createFeedbackDto.email,
+      content: createFeedbackDto.content,
+      categories: createFeedbackDto.categories,
+      user,
+    });
+
     const savedFeedback = await this.feedbacksRepository.save(feedback);
 
-    
-    this.processFeedbackInBackground(savedFeedback);
+    // Processa IA de forma assíncrona
+    this.processFeedbackInBackground(savedFeedback.id);
 
-    
     return savedFeedback;
   }
 
@@ -50,12 +63,26 @@ export class FeedbacksService {
    * @private
    * @param feedback - Feedback a processar
    */
-  private async processFeedbackInBackground(feedback: Feedback) {
+  private async processFeedbackInBackground(feedbackId: string) {
     try {
-      console.log(`[Background] Iniciando IA para Feedback ID: ${feedback.id}...`);
+      console.log(`[Background] Iniciando IA para Feedback ID: ${feedbackId}...`);
+
+      const feedback = await this.feedbacksRepository.findOne({
+        where: { id: feedbackId },
+        relations: ['user'],
+      });
+
+      if (!feedback) throw new NotFoundException('Feedback não encontrado');
+
+      const { companyName, nicho, name: gestorName } = feedback.user || {} as any;
 
       // 1. Faz requisição ao Gemini para análise de sentimento e geração de resposta
-      const analysis = await this.analyzeFeedback(feedback.content);
+      const analysis = await this.analyzeFeedback(
+        feedback.content,
+        companyName,
+        nicho,
+        gestorName,
+      );
 
       // 2. Persiste resultado da análise (sentiment, actionRequired, suggestedResponse)
       await this.feedbacksRepository.update(feedback.id, {
@@ -76,10 +103,9 @@ export class FeedbacksService {
       console.log(`[Background] Finalizado com sucesso para ID: ${feedback.id}`);
 
     } catch (error) {
-      console.error(`[Background] Erro no ID ${feedback.id}:`, error);
-      
-      
-      await this.feedbacksRepository.update(feedback.id, {
+      console.error(`[Background] Erro no ID ${feedbackId}:`, error);
+
+      await this.feedbacksRepository.update(feedbackId, {
         sentiment: 'ERRO', 
         actionRequired: true,
         suggestedResponse: 'Erro ao processar IA. Verifique manualmente.'
@@ -148,17 +174,25 @@ export class FeedbacksService {
    * @returns Objeto com sentiment (POSITIVE|NEGATIVE|NEUTRAL) e response empática
    * @throws Error se a API do Gemini falhar
    */
-  private async analyzeFeedback(text: string): Promise<{ sentiment: string, response: string }> {
+  private async analyzeFeedback(
+    text: string,
+    companyName?: string,
+    nicho?: string,
+    gestorName?: string,
+  ): Promise<{ sentiment: string, response: string }> {
     try {
       // Prompt customizado: pede análise de sentimento + geração de resposta empática
       const prompt = `
-        Aja como um gerente atencioso que se importa muito com a experiencia do cliente.
+        Aja como um gerente atencioso do estabelecimento ${companyName ?? 'da empresa'}.
+        Nicho/segmento: ${nicho ?? 'não informado'}.
+        Nome do gestor: ${gestorName ?? 'Gestor'}.
         Analise o seguinte feedback: "${text}"
+        Considere o nicho para ajustar tom e vocabulário.
         
         Retorne APENAS um JSON (sem crase, sem markdown) neste formato exato:
         {
           "sentiment": "POSITIVE" ou "NEGATIVE" ou "NEUTRAL",
-          "response": "Escreva uma resposta curta (max 2 frases), empática e profissional para esse cliente."
+          "response": "Escreva uma resposta curta (max 2 frases), empática e profissional para esse cliente, coerente com o nicho."
         }
       `;
 

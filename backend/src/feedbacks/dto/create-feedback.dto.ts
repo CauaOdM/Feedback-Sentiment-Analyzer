@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString,  IsEmail, Length, IsArray, IsOptional } from 'class-validator';
+import { IsNotEmpty, IsString,  IsEmail, Length, IsArray, IsOptional, Matches } from 'class-validator';
 
 /**
  * DTO para criação de feedback
@@ -21,4 +21,9 @@ export class CreateFeedbackDto {
   @IsArray()
   @IsOptional()
   categories: string[];
+
+  @IsString()
+  @IsNotEmpty()
+  @Matches(/^[a-z0-9-]+$/, { message: 'Slug deve conter apenas letras minúsculas, números e hífen' })
+  slug: string;
 }
