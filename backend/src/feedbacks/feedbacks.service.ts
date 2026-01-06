@@ -119,8 +119,10 @@ export class FeedbacksService {
    * Lista todos os feedbacks em ordem decrescente de data
    * @returns Array de feedbacks
    */
-  async findAll() {
+  async findAllByUser(userId: string) {
     return await this.feedbacksRepository.find({
+      where: { user: { id: userId } },
+      relations: ['user'],
       order: { createdAt: 'DESC' }
     });
   }

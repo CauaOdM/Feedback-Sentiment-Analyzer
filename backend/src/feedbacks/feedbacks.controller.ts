@@ -1,6 +1,7 @@
-import { Controller, Post, Body, Get, Delete, Param, Patch } from '@nestjs/common';
+import { Controller, Post, Body, Get, Delete, Param, Patch, UseGuards, Request } from '@nestjs/common';
 import { FeedbacksService } from './feedbacks.service';
 import { CreateFeedbackDto } from './dto/create-feedback.dto';
+import { AuthGuard } from '@nestjs/passport';
 
 /**
  * Controlador de feedbacks
@@ -23,14 +24,16 @@ export class FeedbacksController {
    * GET /feedbacks
    * Lista todos os feedbacks em ordem decrescente de data
    */
+  @UseGuards(AuthGuard('jwt'))
   @Get() 
-  findAll() {
-    return this.feedbacksService.findAll();
+  findAll(@Request() req) {
+    return this.feedbacksService.findAllByUser(req.user.userId);
   }
   /**
    * DELETE /feedbacks/:id
    * Deleta feedback por ID
    */
+  @UseGuards(AuthGuard('jwt'))
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.feedbacksService.remove(id);
@@ -40,6 +43,7 @@ export class FeedbacksController {
    * PATCH /feedbacks/:id
    * Atualiza resposta sugerida de um feedback
    */
+  @UseGuards(AuthGuard('jwt'))
   @Patch(':id')
   update(
     @Param('id') id: string, 
@@ -52,6 +56,7 @@ export class FeedbacksController {
    * POST /feedbacks/:id/reply
    * Envia email com resposta sugerida para o cliente
    */
+  @UseGuards(AuthGuard('jwt'))
   @Post(':id/reply')
   sendReply(@Param('id') id: string) {
     return this.feedbacksService.sendManualEmail(id);

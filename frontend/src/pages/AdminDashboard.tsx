@@ -44,6 +44,12 @@ export default function AdminDashboard() {
   const [editText, setEditText] = useState('');
   const [sendingId, setSendingId] = useState<string | null>(null);
   const [modal, setModal] = useState<ModalState | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  const evaluationLink = useMemo(() => {
+    if (!user?.slug) return null;
+    return `${window.location.origin}/avaliar/${user.slug}`;
+  }, [user?.slug]);
 
   const [sentEmails, setSentEmails] = useState<string[]>(() => {
     const saved = localStorage.getItem('sentEmails');
@@ -137,7 +143,11 @@ export default function AdminDashboard() {
     } catch (error) { alert('Erro ao salvar.'); }
   };
 
-  useEffect(() => { fetchFeedbacks(); }, []);
+  useEffect(() => {
+    if (user) {
+      fetchFeedbacks();
+    }
+  }, [user]);
 
   const chartData = [
     { name: 'Positivo', value: feedbacks.filter(f => f.sentiment === 'POSITIVE').length, color: '#10b981' },
@@ -200,6 +210,36 @@ export default function AdminDashboard() {
             <RefreshCw size={20} className={loading ? 'animate-spin' : ''} /> {loading ? 'Atualizando...' : 'Atualizar'}
           </button>
         </div>
+
+        {evaluationLink && (
+          <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div>
+              <p className="text-slate-400 text-xs uppercase tracking-[0.2em] font-semibold">Link de Avaliação</p>
+              <p className="text-sm text-slate-200 mt-1">Envie para clientes avaliarem seu estabelecimento</p>
+            </div>
+            <div className="flex flex-1 gap-2 items-center">
+              <input
+                readOnly
+                value={evaluationLink}
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-200 select-all"
+              />
+              <button
+                onClick={async () => {
+                  try {
+                    await navigator.clipboard.writeText(evaluationLink);
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 1500);
+                  } catch (err) {
+                    console.error(err);
+                  }
+                }}
+                className="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold"
+              >
+                {copied ? 'Copiado!' : 'Copiar'}
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Totais */}
         <div className="bg-slate-900/50 p-6 rounded-2xl border border-slate-800 shadow-xl backdrop-blur-sm flex items-center justify-between">
